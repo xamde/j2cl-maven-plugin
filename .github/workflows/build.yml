@@ -1,7 +1,7 @@
 # Build maven project and run tests. This currently runs on all commits to pull requests and branches, and must not
 # use any secrets or attempt to deploy, but only verify the build.
 name: Build and test
-on: [push, pull_request]
+on: [push, pull_request,workflow_dispatch]
 jobs:
   os-test:
     runs-on: ${{ matrix.os }}
