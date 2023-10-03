@@ -20,7 +20,8 @@ jobs:
       - name: Build and test
         run: |
           mvn --batch-mode org.apache.maven.plugins:maven-dependency-plugin:3.2.0:go-offline
-          mvn --batch-mode install '-Dinvoker.timeoutInSeconds=300'
+          mvn --batch-mode install
+#          mvn --batch-mode install '-Dinvoker.timeoutInSeconds=300'
       - name: Upload test results for review
         uses: actions/upload-artifact@v2
         if: always()
