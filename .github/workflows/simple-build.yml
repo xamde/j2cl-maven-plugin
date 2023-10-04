@@ -1,0 +1,41 @@
+# Build maven project and run tests. This currently runs on all commits to pull requests and branches, and must not
+# use any secrets or attempt to deploy, but only verify the build.
+name: Build and test
+on: [push, pull_request,workflow_dispatch]
+jobs:
+  simple-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mvn: ['3.8.6']
+        java: ['11', '17']
+#        include: # Confirm that old java works in the oldest maven, and that newest maven supports 8-current
+#            #TODO j2clmavenplugin#159 - re-enable this when the integration tests run cleanly in Java 17+
+#          - mvn: '3.8.6'
+#            java: '17'
+#          - mvn: '3.8.6'
+#            java: '18'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+      - name: Set up maven wrapper for specified version
+        run: |
+          mvn wrapper:wrapper -Dmaven=${{ matrix.mvn }}
+      - name: Build and test
+        run: |
+          ./mvnw --batch-mode org.apache.maven.plugins:maven-dependency-plugin:3.2.0:go-offline
+          ./mvnw --batch-mode install '-Dinvoker.timeoutInSeconds=300' -X -e
+      - name: Upload test results for review
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: test-results-mvn-v${{ matrix.mvn }}-jvm${{ matrix.java }}
+          path: |
+            j2cl-maven-plugin/target/it-tests/*/build.log
+            */target/surefire-reports/
+          retention-days: 5
